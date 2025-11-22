@@ -1,0 +1,8 @@
+{
+    "MAX_WORDS": 20000,
+    "MAX_LEN": 300,
+    "EMBEDDING_DIM": 100,
+    "BATCH_SIZE": 128,
+    "EPOCHS": 5,
+    "DROPOUT_RATE": 0.5
+}

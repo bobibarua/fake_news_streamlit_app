@@ -7,15 +7,13 @@ from tensorflow.keras.models import load_model
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 
 # Page settings
-
 st.set_page_config(
     page_title="Fake News Detection",
     page_icon="📰",
-    layout="centered"
+    layout="centered",
 )
 
 # Load model, tokenizer, metadata
-
 model = load_model("model__gru.h5")
 tokenizer = joblib.load("tokenizer.pkl")
 
@@ -25,7 +23,6 @@ with open("model_metadata.json", "r") as f:
 MAX_LEN = metadata["MAX_LEN"]
 
 # Prediction function
-
 def predict(text):
     seq = tokenizer.texts_to_sequences([text])
     padded = pad_sequences(seq, maxlen=MAX_LEN)
@@ -34,33 +31,65 @@ def predict(text):
     return pred, prob  # prob = REAL probability
 
 # Initialize session state
-
 if "do_predict" not in st.session_state:
     st.session_state.do_predict = False
 
-# Custom CSS
-
+# Custom CSS for dark background image and readable text
 st.markdown("""
     <style>
+        /* Background image with overlay */
+        .stApp {
+            background: 
+                linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)),
+                url("https://cdn.builtin.com/cdn-cgi/image/f=auto,fit=cover,w=1200,h=635,q=80/sites/www.builtin.com/files/2024-10/use-ai-battle-misinformation.png");
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+        }
+
+        /* Header */
         .title-banner {
-            font-size: 40px;
+            font-size: 42px;
             font-weight: 900;
             text-align: center;
-            padding: 25px;
-            border-radius: 12px;
-            background: linear-gradient(90deg, #005c97, #363795);
-            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            background: rgba(255,255,255,0.2);
+            color: #fff;
             margin-bottom: 25px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.7);
         }
+
         .sub-text {
             text-align: center;
-            font-size: 18px;
+            font-size: 20px;
             margin-bottom: 25px;
-            color: #444;
+            color: #f0f0f0;
         }
+
+        /* Textarea */
         textarea {
             border-radius: 12px !important;
+            border: 2px solid #fff !important;
+            background-color: rgba(255,255,255,0.85);
+            color: #000;
         }
+
+        /* Predict button */
+        div.stButton > button {
+            background-color: #4a90e2;
+            color: white;
+            border-radius: 10px;
+            padding: 0.5em 1.2em;
+            font-size: 18px;
+            font-weight: 600;
+        }
+        div.stButton > button:hover {
+            background-color: #357ab8;
+            color: white;
+        }
+
+        /* Result boxes */
         .result-box {
             padding: 22px;
             border-radius: 12px;
@@ -68,49 +97,71 @@ st.markdown("""
             text-align: center;
             font-weight: 600;
             margin-top: 25px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
         }
+
         .real {
-            background-color: #d4edda;
-            color: #155724;
+            background-color: rgba(255,255,255,0.2);
+            color: #fff;
             border-left: 8px solid #28a745;
         }
+
         .fake {
-            background-color: #f8d7da;
-            color: #721c24;
+            background-color: rgba(220,53,69,0.85);
+            color: #fff;
             border-left: 8px solid #dc3545;
         }
+
+        /* Progress bars customization */
+        /* 1st bar = REAL, 2nd bar = FAKE */
+        .stProgress > div > div > div > div[role="progressbar"]:nth-child(1) {{
+            background: linear-gradient(90deg, #28a745, #28a745) !important; /* green */
+        }}
+        .stProgress > div > div > div > div[role="progressbar"]:nth-child(2) {{
+            background: linear-gradient(90deg, #dc3545, #dc3545) !important; /* red */
+        }}
+
+        /* Confidence Scores heading and text */
+            h3, .stMarkdown, .stText {
+            color: #ffffff !important;
+        }
+
+
+        /* Spinner text */
+             div.stSpinner > div > div {
+            color: #ffffff !important;
+        }
+ 
+
+        /* Footer */
         .footer {
             text-align: center;
             font-size: 14px;
             margin-top: 40px;
-            color: #777;
+            color: #f0f0f0;
         }
     </style>
 """, unsafe_allow_html=True)
 
+
 # Header
-
 st.markdown('<div class="title-banner">📰 Fake News Detection System</div>', unsafe_allow_html=True)
-st.markdown('<p class="sub-text">Enter a news article or headline below to check if it is likely REAL or FAKE.</p>', unsafe_allow_html=True)
+st.markdown('<p class="sub-text">Enter a news article or headline below to check if it is REAL or FAKE.</p>', unsafe_allow_html=True)
 
-# --------------------------
-# Text input (bound to session state)
-# --------------------------
+# Text input
 text = st.text_area(
     "News Text:",
-    key="text_input",  # directly bound to session state
+    key="text_input",
     height=200,
     placeholder="Type or paste news content here..."
 )
 
 # Predict button
-
 if st.button("Predict", use_container_width=True):
     if text.strip():
         st.session_state.do_predict = True
 
 # Prediction logic
-
 if st.session_state.do_predict and st.session_state.text_input.strip():
     with st.spinner("Analyzing... Please wait."):
         time.sleep(1.5)
@@ -119,7 +170,7 @@ if st.session_state.do_predict and st.session_state.text_input.strip():
         real_percent = real_prob * 100
         fake_percent = fake_prob * 100
 
-    # Display prediction first
+    # Display prediction
     if prediction == 1:
         st.markdown(
             f'<div class="result-box real">✅ This news is <b>REAL</b></div>',
@@ -131,7 +182,7 @@ if st.session_state.do_predict and st.session_state.text_input.strip():
             unsafe_allow_html=True
         )
 
-    # Show confidence scores
+    # Confidence scores
     st.write("### Confidence Scores")
     st.write(f"REAL: {real_percent:.2f}%")
     st.progress(int(real_percent))
@@ -140,3 +191,4 @@ if st.session_state.do_predict and st.session_state.text_input.strip():
 
 # Footer
 st.markdown('<p class="footer">Developed using Streamlit</p>', unsafe_allow_html=True)
+
